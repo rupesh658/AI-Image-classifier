@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Image Classifier</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #eef2f7;
+  padding: 30px;
+}
+.container {
+  background: white;
+  max-width: 550px;
+  margin: auto;
+  padding: 25px;
+  border-radius: 15px;
+}
+h1 { color: #174ea6; }
+button {
+  background: #174ea6;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+img {
+  max-width: 250px;
+  display: block;
+  margin: 20px auto;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>AI Image Classifier</h1>
+<p>Upload an image to identify Cat or Dog.</p>
+<input type="file" id="file" accept="image/*">
+<img id="preview" hidden>
+<br>
+<button onclick="predict()">Predict Image</button>
+<div id="result">Loading AI model...</div>
+</div>
+
+<script>
+let model;
+let imageReady = false;
+
+async function loadModel() {
+  try {
+    model = await tmImage.load("./model.json", "./metadata.json");
+    document.getElementById("result").innerText =
+      "AI Model Loaded Successfully!";
+  } catch (error) {
+    document.getElementById("result").innerText =
+      "Model loading failed. Check model files.";
+    console.error(error);
+  }
+}
+
+document.getElementById("file").onchange = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = document.getElementById("preview");
+  img.src = URL.createObjectURL(file);
+  img.hidden = false;
+  imageReady = true;
+};
+
+async function predict() {
+  if (!model) {
+    alert("Please wait for model loading.");
+    return;
+  }
+  if (!imageReady) {
+    alert("Please upload an image first.");
+    return;
+  }
+
+  const predictions = await model.predict(
+    document.getElementById("preview")
+  );
+
+  document.getElementById("result").innerHTML =
+    "<h3>Prediction Results</h3>" +
+    predictions.map(p =>
+      <p>${p.className}: ${(p.probability * 100).toFixed(2)}%</p>
+    ).join("");
+}
+
+loadModel();
+</script>
+</body>
+</html>
